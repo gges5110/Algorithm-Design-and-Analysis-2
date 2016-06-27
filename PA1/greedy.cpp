@@ -27,12 +27,12 @@ public:
         }
     }
 
-    string print() {
+    string print() const {
         return std::to_string(weight) + ", " + std::to_string(length) + ", score = " + std::to_string(this->score());
     }
 };
 
-unsigned long int total_weight(vector<Job> jobs) {
+unsigned long int total_weight(const vector<Job> &jobs) {
     unsigned long int sum = 0, length = 0;
     for (Job j: jobs) {
         length += j.length;
@@ -55,8 +55,7 @@ vector<Job> ifstream_lines(std::ifstream& fs) {
     return out;
 }
 
-bool sort_check(vector<Job> j) {
-
+bool sort_check(const vector<Job> &j) {
     int size = j.size();
     for (int i = 0; i < size - 1; i++) {
         if (j[i].score() < j[i + 1].score()) {
@@ -80,9 +79,6 @@ int main() {
 
     vector<Job> jobs = ifstream_lines(readFile);
     std::sort(jobs.begin(), jobs.end());
-    // for (int i:weights) {
-    //     std::cout << i << std::endl;
-    // }
 
     for (Job j: jobs) {
         std::cout << j.print() << std::endl;
