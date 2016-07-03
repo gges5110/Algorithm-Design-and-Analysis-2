@@ -54,7 +54,7 @@ public:
 
 
 int main() {
-    const string filename("knapsack1.txt");
+    const string filename("knapsack_big.txt");
     ifstream fs(filename);
     Knapsack knapsack(fs);
     return 0;
