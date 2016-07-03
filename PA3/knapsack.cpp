@@ -9,7 +9,6 @@ using std::ifstream;
 class Knapsack {
 public:
     int *v, *w;
-    int **A;
     int knapsack_size, number_of_items;
     Knapsack(ifstream &fs) {
         fs >> knapsack_size >> number_of_items;
@@ -17,12 +16,12 @@ public:
         // Memory allocation.
         v = new int[number_of_items];
         w = new int[number_of_items];
-        A = new int*[number_of_items];
-        for (int i = 0; i < number_of_items; ++i)
-            A[i] = new int[knapsack_size];
 
+        int *prev, *curr;
+        prev = new int[knapsack_size];
+        curr = new int[knapsack_size];
         for (int j = 0; j < knapsack_size; ++j) {
-            A[0][j] = 0;
+            prev[j] = 0;
         }
 
         // Read file.
@@ -32,26 +31,29 @@ public:
 
         for (int i = 1; i < number_of_items; ++i) {
             for (int j = 0; j < knapsack_size; ++j) {
-                if (j - w[i] >= 0)
-                    A[i][j] = std::max(A[i - 1][j], A[i - 1][j - w[i]] + v[i]);
-                else
-                    A[i][j] = A[i - 1][j];
+                if (j - w[i] >= 0) {
+                    curr[j] = std::max(prev[j], prev[j - w[i]] + v[i]);
+                }
+                else {
+                    curr[j] = prev[j];
+                }
+            }
+
+            // Copy curr to prev.
+            for (int j = 0; j < knapsack_size; ++j) {
+                prev[j] = curr[j];
             }
         }
 
-        std::cout << "Answer = " << A[number_of_items - 1][knapsack_size - 1] << std::endl;
+        std::cout << "Answer = " << curr[knapsack_size - 1] << std::endl;
+
+        delete [] prev, curr;
     }
 
     ~Knapsack() {
-        for (int i = 0; i < number_of_items; ++i)
-            delete [] A[i];
-        delete [] A;
         delete [] v, w;
     }
 };
-
-
-
 
 int main() {
     const string filename("knapsack_big.txt");
