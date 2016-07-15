@@ -71,8 +71,8 @@ public:
     int cost, parent;
     Cost_parent(int cost, int parent): cost(cost), parent(parent) {}
     Cost_parent() {
-        cost = -1;
-        parent = -1;
+        // cost = -1;
+        // parent = -1;
     }
 };
 
@@ -191,7 +191,7 @@ public:
             unordered_set<int> temp_set;
             Set_vertex setVertex(vertex, temp_set);
             Cost_parent costParent(distance_matrix[0][vertex], 0);
-            map[setVertex] = costParent;
+            map.insert({setVertex, costParent});
         }
 
         vector<int> complimentary_set;
@@ -203,24 +203,50 @@ public:
                 for (int k: complimentary_set) {
                     int min = 10000;
                     Set_vertex min_setVertex;
-                    Cost_parent min_costParent;
+                    Cost_parent min_costParent(min, -1);
 
-                    cout << "Calculating node " << k << " with set ";
+                    cout << "Calculating node " << k << endl;// << " with set ";
                     for (int m: set) {
-                        cout << m << ", ";
-                        unordered_set<int> temp_set = Vector_to_set(complimentary_set);
+                        // cout << m << ", ";
+
+                        unordered_set<int> temp_set = Vector_to_set(set);
+
+                        // cout <<  "Erasing " << k << endl;
                         temp_set.erase(m);
                         Set_vertex temp_setVertex(m, temp_set);
-                        Cost_parent temp_costParent = map[temp_setVertex];
-                        if (temp_costParent.cost + distance_matrix[m][k] < min) {
-                            min = temp_costParent.cost + distance_matrix[m][k];
-                            min_setVertex = temp_setVertex;
-                            min_costParent = temp_costParent;
-                        }
-                    }
 
-                    cout << endl;
-                    map[min_setVertex] = min_costParent;
+                        cout << "vertex = " << temp_setVertex.vertex << ", set = ";
+                        for (int i: temp_setVertex.set) {
+                            cout << i << ", ";
+                        }
+                        cout << endl;
+
+                        auto search = map.find(temp_setVertex);
+                        // cout << "Map size = " << map.size() << endl;
+                        if (search != map.end()) {
+                            // cout << "found" << endl;
+                            Cost_parent temp_costParent = map[temp_setVertex];
+                            cout << "Cost = " << temp_costParent.cost + distance_matrix[m][k] << endl;
+
+                            if (temp_costParent.cost + distance_matrix[m][k] < min) {
+                                // cout << "inside" << endl;
+                                min = temp_costParent.cost + distance_matrix[m][k];
+                                min_setVertex = temp_setVertex;
+                                min_costParent = temp_costParent;
+                            }
+                        }
+                        else {
+                            cout << "not found" << endl;
+                        }
+
+                    }
+                    // cout << "Min cost = " << min_costParent.cost << ", parent = " << min_costParent.parent << endl;
+                    // cout << "Min vertex = " << min_setVertex.vertex << endl;
+
+                    // cout << endl;
+                    Set_vertex now(k, Vector_to_set(set));
+                    min_costParent.cost += min;
+                    map.insert({now, min_costParent});
                 }
             }
         }
