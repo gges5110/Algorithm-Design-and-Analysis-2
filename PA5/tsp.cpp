@@ -39,15 +39,15 @@ public:
     Set_vertex() {}
 
     bool operator==(const Set_vertex& that) const {
-        if (vertex != that.vertex) {
-            return false;
+        return (vertex == that.vertex && set == that.set);
+    }
+
+    void print() {
+        cout << "Print Set_vertex info: " << "vertex = " << vertex << ", set = ";
+        for (int i: set) {
+            cout << i << ", ";
         }
-        else if (set != that.set) {
-            return false;
-        }
-        else {
-            return true;
-        }
+        cout << endl;
     }
 };
 
@@ -68,11 +68,14 @@ public:
 
 class Cost_parent {
 public:
-    int cost, parent;
-    Cost_parent(int cost, int parent): cost(cost), parent(parent) {}
+    double cost, parent;
+    Cost_parent(double cost, int parent): cost(cost), parent(parent) {}
     Cost_parent() {
         // cost = -1;
         // parent = -1;
+    }
+    void print() {
+        cout << "Print Cost_parent info: cost = " << cost << ", parent = " << parent << endl;
     }
 };
 
@@ -98,7 +101,7 @@ private:
         }
     }
 
-    void test() {
+    void load_test_distance() {
         distance_matrix = new double*[node_size];
         for (int i = 0; i < node_size; ++i) {
             distance_matrix[i] = new double[node_size];
@@ -154,17 +157,17 @@ public:
         }
 
         calculate_distances();
-
+        minCost();
     }
 
     vector<vector<int>> combinations(int k) {
         vector<int> combinations;
         vector<vector<int>> answer;
-        go(1, k, combinations, answer);
+        permutation(1, k, combinations, answer);
         return answer;
     }
 
-    void go(int offset, int k, vector<int> combinations, vector<vector<int>> &answer) {
+    void permutation(int offset, int k, vector<int> combinations, vector<vector<int>> &answer) {
         if (k == 0) {
             vector<int> temp = combinations;
             answer.push_back(temp);
@@ -172,7 +175,7 @@ public:
         }
         for (int i = offset; i < node_size; ++i) {
              combinations.push_back(i);
-             go(i + 1, k - 1, combinations, answer);
+             permutation(i + 1, k - 1, combinations, answer);
              combinations.pop_back();
         }
     }
@@ -180,7 +183,7 @@ public:
     TSP() {
         node_size = 4;
         nodes = new Coordinate<double>[node_size];
-        test();
+        load_test_distance();
         minCost();
     }
 
@@ -194,62 +197,58 @@ public:
             map.insert({setVertex, costParent});
         }
 
-        vector<int> complimentary_set;
+
         for (int set_size = 1; set_size < node_size - 1; ++set_size) {
             vector<vector<int>> S = combinations(set_size);
             for (vector<int> set: S) {
-                complimentary_set = complimentary(set, node_size);
-
+                vector<int> complimentary_set = complimentary(set, node_size);
                 for (int k: complimentary_set) {
-                    int min = 10000;
-                    Set_vertex min_setVertex;
-                    Cost_parent min_costParent(min, -1);
-
-                    cout << "Calculating node " << k << endl;// << " with set ";
-                    for (int m: set) {
-                        // cout << m << ", ";
-
-                        unordered_set<int> temp_set = Vector_to_set(set);
-
-                        // cout <<  "Erasing " << k << endl;
-                        temp_set.erase(m);
-                        Set_vertex temp_setVertex(m, temp_set);
-
-                        cout << "vertex = " << temp_setVertex.vertex << ", set = ";
-                        for (int i: temp_setVertex.set) {
-                            cout << i << ", ";
-                        }
-                        cout << endl;
-
-                        auto search = map.find(temp_setVertex);
-                        // cout << "Map size = " << map.size() << endl;
-                        if (search != map.end()) {
-                            // cout << "found" << endl;
-                            Cost_parent temp_costParent = map[temp_setVertex];
-                            cout << "Cost = " << temp_costParent.cost + distance_matrix[m][k] << endl;
-
-                            if (temp_costParent.cost + distance_matrix[m][k] < min) {
-                                // cout << "inside" << endl;
-                                min = temp_costParent.cost + distance_matrix[m][k];
-                                min_setVertex = temp_setVertex;
-                                min_costParent = temp_costParent;
-                            }
-                        }
-                        else {
-                            cout << "not found" << endl;
-                        }
-
-                    }
-                    // cout << "Min cost = " << min_costParent.cost << ", parent = " << min_costParent.parent << endl;
-                    // cout << "Min vertex = " << min_setVertex.vertex << endl;
-
-                    // cout << endl;
+                    Cost_parent min_costParent = getMinCost(k, Vector_to_set(set), map);
                     Set_vertex now(k, Vector_to_set(set));
-                    min_costParent.cost += min;
                     map.insert({now, min_costParent});
                 }
             }
         }
+
+        // [0, {1, 2, 3}]
+        vector<int> set;
+        for (int i = 1; i < node_size; ++i) {
+            set.push_back(i);
+        }
+        Cost_parent min_costParent = getMinCost(0, Vector_to_set(set), map);
+        cout << "Final answer = " << min_costParent.cost << endl;
+    }
+
+    Cost_parent getMinCost(int k, unordered_set<int> set, unordered_map<Set_vertex, Cost_parent, KeyHasher> &map) {
+        double min = 100000;
+        Set_vertex min_setVertex;
+        Cost_parent min_costParent(min, -1);
+
+        cout << "Calculating node " << k << endl;
+
+        for (int m: set) {
+            unordered_set<int> temp_set = set;
+            temp_set.erase(m);
+            Set_vertex temp_setVertex(m, temp_set);
+
+            cout << "vertex = " << temp_setVertex.vertex << ", set = ";
+            for (int i: temp_setVertex.set) {
+                cout << i << ", ";
+            }
+            cout << endl;
+
+            Cost_parent temp_costParent = map[temp_setVertex];
+            // cout << "Cost = " << temp_costParent.cost + distance_matrix[m][k] << endl;
+
+            if (temp_costParent.cost + distance_matrix[m][k] < min) {
+                min = temp_costParent.cost + distance_matrix[m][k];
+                min_setVertex = temp_setVertex;
+                min_costParent = temp_costParent;
+            }
+        }
+        min_costParent.cost = min;
+        cout << "Min cost = " << min << endl;
+        return min_costParent;
     }
 
     ~TSP() {
@@ -264,31 +263,13 @@ public:
 int main() {
     const string filename("tsp.txt");
     ifstream fs(filename);
-    TSP tsp;
-    vector<vector<int>> answer = tsp.combinations(2);
-    for (vector<int> set: answer) {
-        for (int i: set) {
-            cout << i << ", ";
-        }
-        cout << endl;
-    }
-    // vector<int> test_v;
-    // test_v.push_back(1);
-    // test_v.push_back(2);
-    // test_v.push_back(3);
-    // test_v.push_back(4);
-    //
-    // for (int i: test_v) {
-    //     cout << i << ", ";
-    // }
-    // cout << endl;
-    //
-    // while(next_permutation(test_v.begin(), test_v.end())) {
-    //     for (int i: test_v) {
+    TSP tsp(fs);
+    // vector<vector<int>> answer = tsp.combinations(2);
+    // for (vector<int> set: answer) {
+    //     for (int i: set) {
     //         cout << i << ", ";
     //     }
     //     cout << endl;
     // }
-
 
 }
