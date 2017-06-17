@@ -1,13 +1,9 @@
-#define DEBUG True
-#ifdef DEBUG
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
-#include <queue>
 #include <unordered_set>
 #include <limits>
-#include "prim.h"
 
 using std::string;
 using std::cout;
@@ -15,22 +11,11 @@ using std::endl;
 using std::ifstream;
 using std::vector;
 using std::numeric_limits;
-using std::priority_queue;
-
-class compareDist {
-  const vector<int>& _dist;
-public:
-  compareDist(const vector<int>& dist): _dist(dist) {}
-
-  bool operator()(int u, int v) {
-    return _dist[u] < _dist[v];
-  }
-};
 
 class Graph {
 public:
   void read_file(std::ifstream& fs) {
-    cout << "read file: " << endl;
+    // cout << "read file: " << endl;
 
     fs >> vertex_size >> edge_size;
 
@@ -46,29 +31,28 @@ public:
   }
 
   int PrimMST() {
-    cout << "Starting Prim's algorithm." << endl;
+    // cout << "Starting Prim's algorithm." << endl;
     vector<int> key(vertex_size, numeric_limits<int>::max());
     vector<int> parent(vertex_size, -1);
     int sum = 0;
 
     key[0] = 0;
     std::unordered_set<int> Q;
-    MyQueue<int, vector<int>, compareDist> unvisited{compareDist(key)};
     for (int i = 0; i < vertex_size; ++i)
-      unvisited.push(i);
+      Q.insert(i);
 
     int iteration = 0;
-    while (!unvisited.empty()) {
-      cout << "Iteration: " << iteration++ << endl;
+    while (!Q.empty()) {
+      // cout << "Iteration: " << iteration++ << endl;
       // Find the min(Q) by key value
-      int u = unvisited.top();
-      unvisited.pop();
+      int u = find_min(Q, key);
+      Q.erase(u);
       if (parent[u] != -1) {
         sum += adjacency_list[u][parent[u]];
-        cout << u << " -> " << parent[u] << endl;
+        // cout << u << " -> " << parent[u] << endl;
       }
 
-      cout << "Update vertex cost." << endl;
+      // cout << "Update vertex cost." << endl;
       for (int v = 0; v < vertex_size; ++v) {
         if (adjacency_list[u][v] != 0) {
           auto search = Q.find(v);
@@ -99,7 +83,7 @@ private:
     int min_id, min = numeric_limits<int>::max();
 
     for (int id: Q) {
-      cout << "find min id = " << id << endl;
+      // cout << "find min id = " << id << endl;
       if (key[id] < min) {
         min_id = id;
         min = key[id];
@@ -124,7 +108,7 @@ int main(int argc, char *argv[]) {
       graph.read_file(fs);
       // graph.print();
 
-      cout << "Minimum spanning tree weight = " << graph.PrimMST() << endl;
+      cout << graph.PrimMST() << endl;
     } catch (ifstream::failure& e) {
       std::cerr << "Exception opening/reading file" << std::endl;
     }
@@ -132,4 +116,3 @@ int main(int argc, char *argv[]) {
   }
   return 0;
 }
-#endif
