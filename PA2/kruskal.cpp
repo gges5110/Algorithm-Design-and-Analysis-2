@@ -1,11 +1,19 @@
+/*
+Compile command:
+g++ -o kruskal.exe -I ./ kruskal.cpp -std=c++11
+*/
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <fstream>
+#include "UnionFind.h"
 
 using std::vector;
 using std::cout;
 using std::endl;
+using std::ifstream;
 
 class Edge {
 public:
@@ -21,87 +29,12 @@ public:
     }
 };
 
-class UF {
-public:
-    int *id, *sz;
-    UF(int n) {
-        id = new int[n];
-        sz = new int[n];
-
-        for (int i = 0; i < n; ++i) {
-            id[i] = i;
-            sz[i] = 1;
-        }
-    }
-
-    int root(int i) {
-        while (i != id[i]) {
-            id[i] = id[id[i]];
-            i = id[i];
-        }
-        return i;
-    }
-
-    bool find(int p, int q) {
-        return root(p) == root(q);
-    }
-
-    void unite(int p, int q) {
-        int i = root(p);
-        int j = root(q);
-        if (sz[i] < sz[j]) {
-            id[i] = j;
-            sz[j] += sz[i];
-        }
-        else {
-            id[j] = i;
-            sz[i] += sz[j];
-        }
-    }
-
-    ~UF() {
-        delete [] id, sz;
-    }
-
-};
-
-
 class Kruskal {
 public:
     int vertex_size;
-    // int** edge_weights;
     vector<Edge> edges;
 
-    Kruskal(std::ifstream& fs) {
-        fs >> vertex_size;
-
-
-        // edge_weights = new int*[vertex_size];
-        // for (int i = 0; i < vertex_size; ++i)
-        //     edge_weights[i] = new int[vertex_size];
-        //
-        // for (int i = 0; i < vertex_size; ++i) {
-        //     for (int j = 0; j < vertex_size; ++j) {
-        //         edge_weights[i][j] = 0;
-        //     }
-        // }
-
-        int v1, v2, w;
-        // for (int i = 0; i < 100; ++i) {
-        //     fs >> v1 >> v2 >> w;
-        //     Edge e(v1, v2, w);
-        //     edges.push_back(e);
-        // }
-
-
-        while (fs >> v1 >> v2 >> w) {
-            Edge e(v1, v2, w);
-            edges.push_back(e);
-            // edge_weights[i - 1][j - 1] = w;
-            // edge_weights[j - 1][i - 1] = w;
-        }
-
-    }
+    Kruskal(int vertex_size, const vector<Edge> &edges) : vertex_size(vertex_size), edges(edges) {}
 
     vector<Edge> MST() {
         return MST(0);
@@ -124,24 +57,40 @@ public:
                 break;
             }
         }
-
         return T;
     }
-
-    // ~Kruskal() {
-    //     for (int i = 0; i < vertex_size; ++i) {
-    //         delete [] edge_weights[i];
-    //     }
-    //     delete [] edge_weights;
-    // }
 };
 
-int main() {
-    const std::string filename("clustering1.txt");
-    std::ifstream fs(filename);
-    Kruskal k(fs);
-    vector<Edge> T = k.MST(4);
-    for (Edge e: T)
-        e.print();
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    std::cout << "Please provide a valid filename for testing." << std::endl;
+  } else {
+    ifstream fs;
+    fs.exceptions(ifstream::failbit | ifstream::badbit);
+    try {
+      cout << "here" << endl;
+      fs.open(argv[1]);
 
+      // Original main
+      int vertex_size;
+      vector<Edge> edges;
+      fs >> vertex_size;
+      int v1, v2, w;
+      while (fs >> v1 >> v2 >> w) {
+          Edge e(v1, v2, w);
+          edges.push_back(e);
+      }
+
+      Kruskal k(vertex_size, edges);
+      vector<Edge> T = k.MST(4);
+      for (Edge e: T)
+          e.print();
+
+    } catch (ifstream::failure& e) {
+      std::cerr << "Exception opening/reading file" << std::endl;
+      cout << e.what() << endl;
+    }
+    fs.close();
+  }
+  return 0;
 }
