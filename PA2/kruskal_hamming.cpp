@@ -14,6 +14,7 @@ using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
+using std::ifstream;
 // using namespace std::chrono;
 
 class Kruskal {
@@ -73,15 +74,22 @@ private:
     }
 };
 
-int main() {
-    // high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    const string filename("clustering_big.txt");
-    std::ifstream fs(filename);
-    Kruskal kruskal(fs);
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    std::cout << "Please provide a valid filename for testing." << std::endl;
+  } else {
+    ifstream fs;
+    fs.exceptions(ifstream::failbit | ifstream::badbit);
+    try {
+      fs.open(argv[1]);
 
-    // high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    // auto duration = duration_cast<seconds>(t2 - t1).count();
-    // cout << "Duration = " << duration << endl;
-
-    return 0;
+      // Original main
+      Kruskal kruskal(fs);
+    } catch (ifstream::failure& e) {
+      std::cerr << "Exception opening/reading file" << std::endl;
+      cout << e.what() << endl;
+    }
+    fs.close();
+  }
+  return 0;
 }
